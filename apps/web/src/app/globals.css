@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/* Design tokens — docs/07-ui-ux-structure.md §2 */
+@theme {
+  --color-brand-900: #132a3e;
+  --color-brand-600: #1f5e8c;
+  --color-accent-500: #b8873b;
+  --color-status-available: #15803d;
+  --color-status-low: #b45309;
+  --color-status-full: #b91c1c;
+  --color-status-blocked: #6b4fa0;
+  --color-status-oos: #57534e;
+  --color-status-closed: #334155;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: light dark;
+  --surface: #f6f8fa;
+  --surface-raised: #ffffff;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --border: #e2e8f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0b1220;
+    --surface-raised: #111a2b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #1e293b;
+  }
+}
+
+body {
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 1;
+}

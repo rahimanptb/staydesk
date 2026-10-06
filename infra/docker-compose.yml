@@ -1,0 +1,54 @@
+# Local development services. Ports bind to 127.0.0.1 only.
+# Usage (from repo root): pnpm infra:up   — requires a .env copied from .env.example
+name: staydesk
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set POSTGRES_SUPERUSER_PASSWORD in .env}
+      POSTGRES_DB: postgres
+      STAYDESK_DB: staydesk
+      SD_OWNER_PASSWORD: ${SD_OWNER_PASSWORD:?set SD_OWNER_PASSWORD in .env}
+      SD_APP_PASSWORD: ${SD_APP_PASSWORD:?set SD_APP_PASSWORD in .env}
+      SD_WORKER_PASSWORD: ${SD_WORKER_PASSWORD:?set SD_WORKER_PASSWORD in .env}
+      SD_PLATFORM_PASSWORD: ${SD_PLATFORM_PASSWORD:?set SD_PLATFORM_PASSWORD in .env}
+      SD_READONLY_PASSWORD: ${SD_READONLY_PASSWORD:?set SD_READONLY_PASSWORD in .env}
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d staydesk']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Catches all outgoing email in development. Web UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
+
+volumes:
+  pgdata:
+  redisdata:

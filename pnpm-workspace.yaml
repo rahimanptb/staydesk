@@ -1,0 +1,14 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm blocks dependency lifecycle scripts by default; only these may run them.
+allowBuilds:
+  prisma: true
+  '@prisma/engines': true
+  esbuild: true
+  sharp: true
+  # Testcontainers' Docker client: optional native speedups / version checks, not needed.
+  cpu-features: false
+  ssh2: false
+  protobufjs: false
