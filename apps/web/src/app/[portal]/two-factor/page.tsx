@@ -4,7 +4,7 @@ import { TwoFactorForm } from '../../../components/auth-forms';
 import { AuthCard } from '../../../components/ui';
 import { PORTAL_COPY, portalOf, type PortalParams } from '../../../lib/portal-params';
 import { nextStepFor } from '../../../lib/routes';
-import { getSession } from '../../../lib/session';
+import { getSession } from '../../../lib/server-api';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Two-factor authentication' };

@@ -790,6 +790,8 @@ model Property {
 
   @@unique([tenantId, id])
   @@unique([tenantId, code])
+  // References are unique per tenant, so prefixes must be too (BR-19).
+  @@unique([tenantId, bookingRefPrefix])
   @@map("property")
 }
 

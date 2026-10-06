@@ -9,6 +9,7 @@ import type { Principal } from '../auth/principal.js';
 import { SessionsService } from '../auth/sessions.service.js';
 import { ApiError } from '../common/api-error.js';
 import { TenantDb } from '../database/database.module.js';
+import { EntitlementsService } from '../inventory/entitlements.service.js';
 
 const membershipInclude = {
   user: { select: { id: true, name: true, email: true, status: true } },
@@ -40,6 +41,7 @@ export class UsersService {
   constructor(
     @Inject(TenantDb) private readonly tenantDb: TenantDb,
     @Inject(InvitationsService) private readonly invitations: InvitationsService,
+    @Inject(EntitlementsService) private readonly entitlements: EntitlementsService,
     @Inject(SessionsService) private readonly sessions: SessionsService,
   ) {}
 
@@ -121,6 +123,20 @@ export class UsersService {
       });
       if (existing && existing.status !== 'REVOKED' && existing.status !== 'INVITED') {
         throw new ApiError('ALREADY_EXISTS', 'This person is already a member of this account');
+      }
+      if (!existing || existing.status === 'REVOKED') {
+        // Re-sending a pending invitation does not use another seat.
+        const staff = await tx.tenantMembership.count({
+          where: { tenantId: principal.tenantId!, status: { not: 'REVOKED' } },
+        });
+        await this.entitlements.assertWithin(
+          tx,
+          principal.tenantId!,
+          'limit.staff',
+          staff,
+          staff + 1,
+          'staff members',
+        );
       }
       const data = {
         roleId: role.id,

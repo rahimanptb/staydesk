@@ -17,6 +17,15 @@ import {
   UsersController,
 } from './tenant/tenant.controllers.js';
 import { UsersService } from './tenant/users.service.js';
+import { EntitlementsService } from './inventory/entitlements.service.js';
+import {
+  PropertiesController,
+  RoomTypesController,
+  RoomsController,
+} from './inventory/inventory.controllers.js';
+import { PropertiesService } from './inventory/properties.service.js';
+import { RoomTypesService } from './inventory/room-types.service.js';
+import { RoomsService } from './inventory/rooms.service.js';
 
 @Global()
 @Module({})
@@ -37,8 +46,23 @@ class EnvModule {
 class PlatformModule {}
 
 @Module({
-  controllers: [TenantProfileController, UsersController, RolesController, AuditLogController],
-  providers: [UsersService, RolesService],
+  controllers: [
+    TenantProfileController,
+    UsersController,
+    RolesController,
+    AuditLogController,
+    PropertiesController,
+    RoomTypesController,
+    RoomsController,
+  ],
+  providers: [
+    UsersService,
+    RolesService,
+    EntitlementsService,
+    PropertiesService,
+    RoomTypesService,
+    RoomsService,
+  ],
 })
 class TenantModule {}
 

@@ -5,31 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import QRCode from 'qrcode';
 import type { ContextOption, InvitationPreview, SessionInfo, TotpSetup } from '@staydesk/contracts';
-import { ApiProblem, api, messageOf, setCsrfToken, type FieldErrors } from '../lib/api-client';
+import { api, messageOf, setCsrfToken, type FieldErrors } from '../lib/api-client';
+import { useSubmit } from '../lib/use-submit';
 import { nextStepFor } from '../lib/routes';
 import { Alert, Button, Field } from './ui';
-
-/** Shared submit handling: pending state, general error, field errors. */
-function useSubmit() {
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  async function run(action: () => Promise<void>) {
-    setPending(true);
-    setError(null);
-    setFieldErrors({});
-    try {
-      await action();
-    } catch (e) {
-      if (e instanceof ApiProblem && Object.keys(e.fieldErrors).length > 0)
-        setFieldErrors(e.fieldErrors);
-      setError(messageOf(e));
-    } finally {
-      setPending(false);
-    }
-  }
-  return { pending, error, fieldErrors, run, setError };
-}
 
 /** Reads a token from the URL fragment (never sent to servers) and removes it from history. */
 function useFragmentToken(): string | null | undefined {

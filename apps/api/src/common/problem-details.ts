@@ -1,6 +1,7 @@
 import { HttpException } from '@nestjs/common';
 import { ZodError } from 'zod';
 import { DomainError } from '@staydesk/domain';
+import { Prisma } from '@staydesk/db';
 import {
   ERROR_STATUS,
   errorTypeUri,
@@ -93,6 +94,15 @@ export function toProblem(error: unknown, requestId: string): ProblemResult {
     return {
       status: ERROR_STATUS[error.code],
       body: problem(error.code, requestId, error.message, meta ? { meta } : {}),
+      unexpected: false,
+    };
+  }
+  // A unique constraint caught a race the service-level pre-check could not (two concurrent
+  // creates). Reported generically: constraint names must not leak.
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    return {
+      status: 409,
+      body: problem('ALREADY_EXISTS', requestId, 'This already exists; refresh and try again'),
       unexpected: false,
     };
   }

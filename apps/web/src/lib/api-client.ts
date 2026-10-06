@@ -38,8 +38,13 @@ interface ProblemBody {
   meta?: Record<string, unknown>;
 }
 
-export async function api<T>(method: Method, path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = {};
+export async function api<T>(
+  method: Method,
+  path: string,
+  body?: unknown,
+  options: { headers?: Record<string, string> } = {},
+): Promise<T> {
+  const headers: Record<string, string> = { ...options.headers };
   if (body !== undefined) headers['content-type'] = 'application/json';
   if (method !== 'GET' && csrfToken) headers['x-csrf-token'] = csrfToken;
 
