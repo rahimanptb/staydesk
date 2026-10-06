@@ -16,7 +16,7 @@
     "format:check": "prettier --check .",
     "infra:up": "docker compose --env-file .env -f infra/docker-compose.yml up -d --wait",
     "infra:down": "docker compose --env-file .env -f infra/docker-compose.yml down",
-    "db:migrate": "pnpm --filter @staydesk/db migrate:deploy",
+    "db:migrate": "pnpm --filter @staydesk/db migrate:deploy && pnpm --filter @staydesk/db seed",
     "db:status": "pnpm --filter @staydesk/db migrate:status",
     "test:integration": "turbo run test:integration"
   },

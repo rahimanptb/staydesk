@@ -6,6 +6,7 @@ import {
   isPermissionKey,
   permissionsFor,
   ungrantablePermissions,
+  effectivePermissions,
   type PermissionKey,
 } from './permissions.js';
 
@@ -64,5 +65,23 @@ describe('ungrantablePermissions (PE-1)', () => {
         'TENANT',
       ),
     ).toEqual(['agency.manage', 'platform.stats.view']);
+  });
+});
+
+describe('effectivePermissions', () => {
+  it('derives non-editable system roles from the catalogue, ignoring stored rows', () => {
+    const admin = effectivePermissions(
+      { key: 'HOTEL_ADMIN', context: 'TENANT', isSystem: true, isEditable: false },
+      [],
+    );
+    expect(admin.sort()).toEqual(permissionsFor('TENANT').sort());
+  });
+
+  it('uses stored keys for editable roles, dropping unknown or foreign-context keys', () => {
+    const staff = effectivePermissions(
+      { key: 'HOTEL_STAFF', context: 'TENANT', isSystem: true, isEditable: true },
+      ['booking.view', 'platform.stats.view', 'made.up'],
+    );
+    expect(staff).toEqual(['booking.view']);
   });
 });

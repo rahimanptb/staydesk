@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
     }
   },
   "scripts": {
@@ -18,11 +22,13 @@
     "validate": "prisma validate",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
-    "test:integration": "vitest run"
+    "test:integration": "vitest run",
+    "seed": "node dist/bin/seed.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "@staydesk/domain": "workspace:*",
     "dotenv": "^18.0.5"
   },
   "devDependencies": {

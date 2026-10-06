@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type pg from 'pg';
-import { inContext, pgErrorCode, startTestDatabase, type TestDatabase } from './test-database.js';
+import {
+  inContext,
+  pgErrorCode,
+  startTestDatabase,
+  type TestDatabase,
+} from '../src/testing/index.js';
 
 /**
  * Database-level guarantees (docs/10 §4, docs/11 XT-02/XT-03). These hold even if application

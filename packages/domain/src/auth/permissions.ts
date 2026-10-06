@@ -415,3 +415,29 @@ export function ungrantablePermissions(
 ): PermissionKey[] {
   return requested.filter((p) => !grantorPermissions.has(p) || PERMISSIONS[p].context !== context);
 }
+
+export interface RoleRecord {
+  key: string;
+  context: RoleContext;
+  isSystem: boolean;
+  isEditable: boolean;
+}
+
+/**
+ * The permissions a role grants. Non-editable system roles (Hotel Admin, Super Admin, Agent
+ * roles…) always take their permissions from the code catalogue, so adding a permission reaches
+ * every tenant without a data migration. Editable roles use their stored permission keys,
+ * filtered to known keys of the role's context.
+ */
+export function effectivePermissions(
+  role: RoleRecord,
+  storedKeys: readonly string[],
+): PermissionKey[] {
+  if (role.isSystem && !role.isEditable) {
+    const template = SYSTEM_ROLES.find((r) => r.key === role.key && r.context === role.context);
+    return template ? [...template.permissions] : [];
+  }
+  return storedKeys.filter(
+    (k): k is PermissionKey => isPermissionKey(k) && PERMISSIONS[k].context === role.context,
+  );
+}

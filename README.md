@@ -44,6 +44,7 @@ pnpm dev
 Quality gates (also run in CI): `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check`.
 
 `pnpm test:integration` needs Docker. It runs the database security suite against a throwaway PostgreSQL container, covering:
+
 - row-level security across tenants
 - role grants
 - append-only records

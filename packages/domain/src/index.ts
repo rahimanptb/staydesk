@@ -8,3 +8,4 @@ export * from './availability/agent-projection.js';
 export * from './bookings/state-machine.js';
 export * from './bookings/reference.js';
 export * from './auth/permissions.js';
+export * from './auth/password-policy.js';

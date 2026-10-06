@@ -2,12 +2,17 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import pg from 'pg';
+import { createDbClient } from '../client.js';
+import { seedCatalog } from '../seed/catalog.js';
 
-const packageDir = fileURLToPath(new URL('..', import.meta.url));
+// Same depth from src/testing (db's own tests) and dist/testing (consumers' tests).
+const packageDir = fileURLToPath(new URL('../..', import.meta.url));
 const rolesScript = fileURLToPath(
-  new URL('../../../infra/postgres/init/01-roles.sh', import.meta.url),
+  new URL('../../../../infra/postgres/init/01-roles.sh', import.meta.url),
 );
-const prismaCli = fileURLToPath(new URL('../node_modules/prisma/build/index.js', import.meta.url));
+const prismaCli = fileURLToPath(
+  new URL('../../node_modules/prisma/build/index.js', import.meta.url),
+);
 
 /** Throwaway credentials for the disposable test container only. */
 const PASSWORDS = {
@@ -21,6 +26,9 @@ const PASSWORDS = {
 export type DbRole = keyof typeof PASSWORDS;
 
 export interface TestDatabase {
+  /** Connection string for a role, e.g. to build a Prisma client. */
+  url(role: DbRole): string;
+  /** A raw node-postgres client connected as `role` (closed by `stop`). */
   connect(role: DbRole): Promise<pg.Client>;
   /** Runs the Prisma CLI against this database as the schema owner. */
   prisma(args: string[]): { status: number | null; output: string };
@@ -29,7 +37,7 @@ export interface TestDatabase {
 
 /**
  * Starts PostgreSQL 16 in Docker, initialises it with the same role script used locally and on
- * servers, and applies every migration. The result mirrors production's database layout.
+ * servers, applies every migration and seeds the catalogue — the same steps as a deploy.
  */
 export async function startTestDatabase(): Promise<TestDatabase> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer('postgres:16-alpine')
@@ -67,8 +75,16 @@ export async function startTestDatabase(): Promise<TestDatabase> {
     throw new Error(`prisma migrate deploy failed:\n${migrate.output}`);
   }
 
+  const ownerDb = createDbClient({ connectionString: url('sd_owner'), max: 1 });
+  try {
+    await seedCatalog(ownerDb);
+  } finally {
+    await ownerDb.$disconnect();
+  }
+
   const clients: pg.Client[] = [];
   return {
+    url,
     prisma,
     async connect(role) {
       const client = new pg.Client({ connectionString: url(role) });

@@ -510,6 +510,8 @@ model User {
   /// AES-256-GCM encrypted TOTP secret.
   totpSecretEnc     Bytes?     @map("totp_secret_enc")
   totpEnabledAt     DateTime?  @map("totp_enabled_at") @db.Timestamptz(6)
+  /// Last accepted TOTP time step; a code cannot be replayed.
+  totpLastStep      Int?       @map("totp_last_step")
   lastLoginAt       DateTime?  @map("last_login_at") @db.Timestamptz(6)
   locale            String     @default("en")
   createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -548,7 +550,6 @@ model Session {
   tenantId          String?     @map("tenant_id") @db.Uuid
   agencyId          String?     @map("agency_id") @db.Uuid
   supportGrantId    String?     @map("support_grant_id") @db.Uuid
-  csrfTokenHash     Bytes       @map("csrf_token_hash")
   mfaVerifiedAt     DateTime?   @map("mfa_verified_at") @db.Timestamptz(6)
   ip                String?     @db.Inet
   userAgent         String?     @map("user_agent")
