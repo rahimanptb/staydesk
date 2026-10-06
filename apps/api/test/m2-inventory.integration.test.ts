@@ -272,6 +272,16 @@ describe('rooms keep tracked totals in step (C4)', () => {
       (await ownerA.get(`/properties/${seaview}/room-types/${cottage}`)).body.totalInventory,
     ).toBe(1);
     expect((await ownerA.post(`/properties/${seaview}/rooms/${v4.id}/archive`)).status).toBe(204);
+    const summaries = (await ownerA.get('/audit-logs?limit=10')).body.data.map(
+      (e: { summary: string }) => e.summary,
+    );
+    expect(summaries).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/deactivated room V5$/),
+        expect.stringMatching(/moved room V4 to a different room type$/),
+        expect.stringMatching(/archived room V4$/),
+      ]),
+    );
     expect(
       (await ownerA.get(`/properties/${seaview}/room-types/${cottage}`)).body.totalInventory,
     ).toBe(0);

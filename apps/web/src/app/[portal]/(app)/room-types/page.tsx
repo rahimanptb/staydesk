@@ -14,6 +14,8 @@ import type { PortalParams } from '../../../../lib/portal-params';
 import { can, getProperties, serverGet } from '../../../../lib/server-api';
 
 export const dynamic = 'force-dynamic';
+
+const count = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 export const metadata: Metadata = { title: 'Room types' };
 
 export default async function RoomTypesPage({ params }: PortalParams) {
@@ -60,7 +62,8 @@ export default async function RoomTypesPage({ params }: PortalParams) {
                 <div className="text-xs text-[var(--text-muted)]">{t.code}</div>
               </Td>
               <Td className="text-xs">
-                Up to {t.maxOccupancy} guests ({t.maxAdults} adults, {t.maxChildren} children)
+                Up to {count(t.maxOccupancy, 'guest')} ({count(t.maxAdults, 'adult')},{' '}
+                {count(t.maxChildren, 'child', 'children')})
               </Td>
               <Td className="tabular-nums">{t.totalInventory}</Td>
               <Td className="text-xs text-[var(--text-muted)]">

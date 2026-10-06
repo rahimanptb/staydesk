@@ -177,7 +177,15 @@ export class RoomsService {
         action: 'room.update',
         entityType: 'room',
         entityId: roomId,
-        summary: `${principal.name} updated room ${after.number}`,
+        summary: `${principal.name} ${
+          before.roomTypeId !== after.roomTypeId
+            ? `moved room ${after.number} to a different room type`
+            : before.status !== after.status
+              ? `${after.status === 'ACTIVE' ? 'activated' : 'deactivated'} room ${after.number}`
+              : before.number !== after.number
+                ? `renumbered room ${before.number} to ${after.number}`
+                : `updated room ${after.number}`
+        }`,
         before: {
           number: before.number,
           floor: before.floor,
