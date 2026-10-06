@@ -49,7 +49,8 @@ export async function withDbContext<T>(
         set_config('app.user_id', ${context.userId ?? ''}, true)`;
       return fn(tx);
     },
-    { timeout: options.timeoutMs ?? 10_000 },
+    // Under bursts, wait for a pooled connection rather than failing after Prisma's 2 s default.
+    { timeout: options.timeoutMs ?? 10_000, maxWait: 10_000 },
   );
 }
 

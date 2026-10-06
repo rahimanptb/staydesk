@@ -306,9 +306,11 @@ describe('total inventory changes respect future commitments (BR-09)', () => {
   const past = today.minusDays(5).toString();
 
   it('refuses to cut capacity below what upcoming nights already consume', async () => {
+    // Future rows are pre-created with the room type (docs/08 §14); the past one is history.
     await owner.query(
       `INSERT INTO inventory_day (tenant_id, property_id, room_type_id, date, total, booked)
-       VALUES ($1, $2, $3, $4, 10, 8), ($1, $2, $3, $5, 10, 10)`,
+       VALUES ($1, $2, $3, $4, 10, 8), ($1, $2, $3, $5, 10, 10)
+       ON CONFLICT (room_type_id, date) DO UPDATE SET total = EXCLUDED.total, booked = EXCLUDED.booked`,
       [tenantA, seaview, deluxe, future, past],
     );
     const etag = (await ownerA.get(`/properties/${seaview}/room-types/${deluxe}`)).headers
@@ -341,13 +343,19 @@ describe('total inventory changes respect future commitments (BR-09)', () => {
     });
     expect(res.status).toBe(200);
     const rows = await owner.query(
-      `SELECT to_char(date, 'YYYY-MM-DD') AS date, total FROM inventory_day WHERE room_type_id = $1 ORDER BY date`,
-      [deluxe],
+      `SELECT to_char(date, 'YYYY-MM-DD') AS date, total FROM inventory_day
+       WHERE room_type_id = $1 AND date IN ($2, $3) ORDER BY date`,
+      [deluxe, past, future],
     );
     expect(rows.rows).toEqual([
       { date: past, total: 10 },
       { date: future, total: 9 },
     ]);
+    const stale = await owner.query(
+      'SELECT count(*)::int AS n FROM inventory_day WHERE room_type_id = $1 AND date >= $2 AND total <> 9',
+      [deluxe, today.toString()],
+    );
+    expect(stale.rows[0].n).toBe(0);
   });
 
   it('refuses to archive a room type with upcoming blocks, then archives with its rooms', async () => {

@@ -2,7 +2,7 @@
 
 Multi-tenant SaaS for hotel and resort **room inventory, bookings and B2B travel-agent availability**.
 
-> **Status:** Design (Phases 1–12) is complete. Phase 13 milestones **M0 (foundations)** and **M1 (identity, tenancy, roles and permissions, audit)** are done. Next is **M2: properties, room types and rooms**.
+> **Status:** Design (Phases 1–12) is complete. Phase 13 milestones **M0 (foundations)**, **M1 (identity, tenancy, roles and permissions, audit)**, **M2 (properties, room types and rooms)** and **M3 (availability engine: inventory ledger, blocks, out of service, stop-sell, availability calendar, reconciliation)** are done. Next is **M4: the booking engine**.
 
 ## Getting started
 

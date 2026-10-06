@@ -194,6 +194,14 @@ enum StopSellScope {
   @@map("stop_sell_scope")
 }
 
+enum ReconciliationTrigger {
+  SCHEDULED
+  MANUAL
+  REPAIR
+
+  @@map("reconciliation_trigger")
+}
+
 enum BookingStatus {
   INQUIRY
   TENTATIVE
@@ -771,7 +779,7 @@ model Property {
   createdAt                DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  tenant                 Tenant                 @relation(fields: [tenantId], references: [id])
+  tenant                 Tenant                    @relation(fields: [tenantId], references: [id])
   membershipProperties   MembershipProperty[]
   holidays               Holiday[]
   images                 PropertyImage[]
@@ -787,6 +795,7 @@ model Property {
   waitlistEntries        WaitlistEntry[]
   agencyAccessProperties AgencyAccessProperty[]
   bookingRequests        BookingRequest[]
+  reconciliations        InventoryReconciliation[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, code])
@@ -999,12 +1008,16 @@ model RoomBlock {
   releasedById     String?     @map("released_by_id") @db.Uuid
   releasedAt       DateTime?   @map("released_at") @db.Timestamptz(6)
   releaseReason    String?     @map("release_reason")
+  /// Set on the continuation created when some rooms of a running block are released (docs/08 §7).
+  splitFromId      String?     @map("split_from_id") @db.Uuid
   createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   property   Property        @relation(fields: [tenantId, propertyId], references: [tenantId, id])
   roomType   RoomType        @relation(fields: [propertyId, roomTypeId], references: [propertyId, id])
   room       Room?           @relation(fields: [propertyId, roomId], references: [propertyId, id])
+  splitFrom  RoomBlock?      @relation("BlockSplit", fields: [tenantId, splitFromId], references: [tenantId, id])
+  splits     RoomBlock[]     @relation("BlockSplit")
   allocation RoomAllocation?
 
   @@unique([tenantId, id])
@@ -1033,6 +1046,27 @@ model StopSell {
 
   @@index([propertyId, startDate])
   @@map("stop_sell")
+}
+
+/// One reconciliation pass over a property's inventory projection (docs/08 §12). Any mismatch is an incident.
+model InventoryReconciliation {
+  id            String                @id @default(uuid(7)) @db.Uuid
+  tenantId      String                @map("tenant_id") @db.Uuid
+  propertyId    String                @map("property_id") @db.Uuid
+  trigger       ReconciliationTrigger
+  mismatchCount Int                   @map("mismatch_count")
+  /// The first mismatches found (capped), for the incident record.
+  mismatches    Json                  @default("[]")
+  /// Who ran a manual check or repair, and why.
+  actor         String?
+  reason        String?
+  startedAt     DateTime              @map("started_at") @db.Timestamptz(6)
+  finishedAt    DateTime              @map("finished_at") @db.Timestamptz(6)
+
+  property Property @relation(fields: [tenantId, propertyId], references: [tenantId, id])
+
+  @@index([propertyId, startedAt])
+  @@map("inventory_reconciliation")
 }
 
 /// Physical room occupancy for a date range; an EXCLUDE constraint forbids overlaps per room.

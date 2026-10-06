@@ -6,6 +6,8 @@ export const updateTenantProfileSchema = z.strictObject({
   legalName: z.string().trim().max(200).nullable().optional(),
   billingEmail: emailSchema.nullable().optional(),
   requireStaff2fa: z.boolean().optional(),
+  /** Lets holders of inventory.override exceed availability, with a reason (C8). */
+  overbookingEnabled: z.boolean().optional(),
 });
 
 const propertyScope = {

@@ -12,3 +12,5 @@ allowBuilds:
   cpu-features: false
   ssh2: false
   protobufjs: false
+  # BullMQ's msgpack: optional native decoder; the pure-JS fallback is used.
+  msgpackr-extract: false

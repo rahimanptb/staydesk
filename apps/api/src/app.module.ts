@@ -26,6 +26,14 @@ import {
 import { PropertiesService } from './inventory/properties.service.js';
 import { RoomTypesService } from './inventory/room-types.service.js';
 import { RoomsService } from './inventory/rooms.service.js';
+import {
+  AvailabilityController,
+  BlocksController,
+  StopSellsController,
+} from './inventory/availability.controllers.js';
+import { AvailabilityService } from './inventory/availability.service.js';
+import { BlocksService } from './inventory/blocks.service.js';
+import { StopSellsService } from './inventory/stop-sells.service.js';
 
 @Global()
 @Module({})
@@ -54,6 +62,9 @@ class PlatformModule {}
     PropertiesController,
     RoomTypesController,
     RoomsController,
+    AvailabilityController,
+    BlocksController,
+    StopSellsController,
   ],
   providers: [
     UsersService,
@@ -62,6 +73,9 @@ class PlatformModule {}
     PropertiesService,
     RoomTypesService,
     RoomsService,
+    AvailabilityService,
+    BlocksService,
+    StopSellsService,
   ],
 })
 class TenantModule {}

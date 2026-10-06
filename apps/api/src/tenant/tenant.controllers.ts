@@ -42,6 +42,7 @@ export interface TenantProfileView {
   billingEmail: string | null;
   country: string;
   requireStaff2fa: boolean;
+  overbookingEnabled: boolean;
 }
 
 @Controller('tenant')
@@ -62,6 +63,7 @@ export class TenantProfileController {
       billingEmail: t.billingEmail,
       country: t.country,
       requireStaff2fa: t.requireStaff2fa,
+      overbookingEnabled: t.overbookingEnabled,
     };
   }
 
@@ -93,12 +95,14 @@ export class TenantProfileController {
           legalName: before.legalName,
           billingEmail: before.billingEmail,
           requireStaff2fa: before.requireStaff2fa,
+          overbookingEnabled: before.overbookingEnabled,
         },
         after: {
           name: after.name,
           legalName: after.legalName,
           billingEmail: after.billingEmail,
           requireStaff2fa: after.requireStaff2fa,
+          overbookingEnabled: after.overbookingEnabled,
         },
       });
     });

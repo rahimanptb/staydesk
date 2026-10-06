@@ -43,7 +43,9 @@ export async function setRoomTypeTotal(
     UPDATE room_type SET total_inventory = ${total}, version = version + 1, updated_at = now()
     WHERE id = ${roomTypeId}::uuid`;
   await tx.$executeRaw`
-    UPDATE inventory_day SET total = ${total}, updated_at = now()
+    UPDATE inventory_day
+    SET total = ${total}, updated_at = now(),
+        overbook_allowance = GREATEST(0, booked + held + blocked + out_of_service - ${total})
     WHERE room_type_id = ${roomTypeId}::uuid AND date >= ${businessDate.toString()}::date`;
   return { previous: current.total_inventory };
 }

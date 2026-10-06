@@ -13,6 +13,7 @@ export interface TenantProfile {
   legalName: string | null;
   billingEmail: string | null;
   requireStaff2fa: boolean;
+  overbookingEnabled: boolean;
 }
 
 export function TenantSettingsForm({
@@ -36,6 +37,7 @@ export function TenantSettingsForm({
         legalName: optionalText(form, 'legalName'),
         billingEmail: optionalText(form, 'billingEmail'),
         requireStaff2fa: checked(form, 'requireStaff2fa'),
+        overbookingEnabled: checked(form, 'overbookingEnabled'),
       });
       setSaved(true);
       router.refresh();
@@ -72,6 +74,14 @@ export function TenantSettingsForm({
             name="requireStaff2fa"
             defaultChecked={tenant.requireStaff2fa}
             hint="Staff without it are asked to set it up at their next sign-in."
+          />
+        </Section>
+        <Section title="Inventory">
+          <Checkbox
+            label="Allow authorised overbooking"
+            name="overbookingEnabled"
+            defaultChecked={tenant.overbookingEnabled}
+            hint="People with the override permission may then exceed availability, giving a reason. Every override is recorded in the audit log."
           />
         </Section>
       </fieldset>

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { CreateRoomsRequest, RoomView, UpdateRoomRequest } from '@staydesk/contracts';
-import type { DbTransaction, Room } from '@staydesk/db';
+import type { DbTransaction, Property, Room } from '@staydesk/db';
 import { writeAudit } from '../audit/audit.js';
 import type { Principal } from '../auth/principal.js';
 import { ApiError } from '../common/api-error.js';
@@ -160,6 +160,10 @@ export class RoomsService {
       if (input.roomTypeId && input.roomTypeId !== before.roomTypeId) {
         await this.trackedType(tx, propertyId, input.roomTypeId);
       }
+      const leavesInventory =
+        (input.status === 'INACTIVE' && before.status === 'ACTIVE') ||
+        (input.roomTypeId !== undefined && input.roomTypeId !== before.roomTypeId);
+      if (leavesInventory) await this.assertNoUpcomingAllocations(tx, property, before);
       const after = await tx.room.update({ where: { id: roomId }, data: input });
 
       const businessDate = businessDateOf(property);
@@ -204,6 +208,28 @@ export class RoomsService {
     return view(room);
   }
 
+  /** A room assigned to upcoming stays or out of service cannot leave its room type's inventory. */
+  private async assertNoUpcomingAllocations(
+    tx: DbTransaction,
+    property: Property,
+    room: { id: string; number: string },
+  ): Promise<void> {
+    const upcoming = await tx.roomAllocation.count({
+      where: {
+        roomId: room.id,
+        endDate: { gt: dateColumn(businessDateOf(property)) },
+        // Fully released blocks leave an empty [start, start) allocation behind.
+        startDate: { lt: tx.roomAllocation.fields.endDate },
+      },
+    });
+    if (upcoming > 0) {
+      throw new ApiError(
+        'INVENTORY_CONFLICT',
+        `Room ${room.number} is assigned to upcoming stays or blocks; release or move them first`,
+      );
+    }
+  }
+
   /** Archive keeps history (C12); refused while the room is allocated to an upcoming stay. */
   async archive(principal: Principal, propertyId: string, roomId: string): Promise<void> {
     const tenantId = principal.tenantId!;
@@ -212,15 +238,7 @@ export class RoomsService {
       const room = await tx.room.findFirst({ where: { id: roomId, propertyId, archivedAt: null } });
       if (!room) throw new ApiError('NOT_FOUND', 'No such room');
       const businessDate = businessDateOf(property);
-      const upcoming = await tx.roomAllocation.count({
-        where: { roomId, endDate: { gt: dateColumn(businessDate) } },
-      });
-      if (upcoming > 0) {
-        throw new ApiError(
-          'INVENTORY_CONFLICT',
-          `Room ${room.number} is assigned to upcoming stays or blocks`,
-        );
-      }
+      await this.assertNoUpcomingAllocations(tx, property, room);
       await tx.room.update({
         where: { id: roomId },
         data: { status: 'ARCHIVED', archivedAt: new Date() },

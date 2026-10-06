@@ -5,6 +5,7 @@ export * from './availability/inventory.js';
 export * from './availability/classification.js';
 export * from './availability/occupancy.js';
 export * from './availability/agent-projection.js';
+export * from './availability/blocks.js';
 export * from './bookings/state-machine.js';
 export * from './bookings/reference.js';
 export * from './auth/permissions.js';

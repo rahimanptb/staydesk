@@ -9,14 +9,12 @@ import {
 } from '@nestjs/common';
 import { createDbClient, type DbClient } from '@staydesk/db';
 import { WORKER_ENV, type WorkerEnv } from './env.js';
+import { InventoryJobs } from './jobs/inventory.jobs.js';
+import { WORKER_DB } from './tokens.js';
 
-/** DI token for the sd_worker Prisma client. */
-export const WORKER_DB = Symbol('WORKER_DB');
+export { WORKER_DB };
 
-/**
- * Keeps the process observable until real jobs are registered (outbox dispatcher, hold expiry,
- * reconciliation — docs/05 §6).
- */
+/** Keeps the process observable between jobs (docs/05 §6). */
 @Injectable()
 class Heartbeat implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger('Heartbeat');
@@ -58,6 +56,7 @@ export class WorkerModule {
             }),
         },
         Heartbeat,
+        InventoryJobs,
       ],
     };
   }

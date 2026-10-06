@@ -22,6 +22,13 @@ export default async function AppLayout({
       ...(can(session, 'property.view') ? [{ href: '/properties', label: 'Properties' }] : []),
       ...(can(session, 'roomType.view') ? [{ href: '/room-types', label: 'Room types' }] : []),
       ...(can(session, 'room.view') ? [{ href: '/rooms', label: 'Rooms' }] : []),
+      ...(can(session, 'availability.view')
+        ? [{ href: '/availability', label: 'Availability' }]
+        : []),
+      ...(can(session, 'block.view')
+        ? [{ href: '/blocks', label: 'Blocks & out of service' }]
+        : []),
+      ...(can(session, 'availability.view') ? [{ href: '/stop-sells', label: 'Stop-sell' }] : []),
       ...(can(session, 'user.view') ? [{ href: '/users', label: 'Users' }] : []),
       ...(can(session, 'auditLog.view') ? [{ href: '/audit-log', label: 'Audit log' }] : []),
       { href: '/settings', label: 'Settings' },

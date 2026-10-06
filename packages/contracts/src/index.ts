@@ -5,3 +5,4 @@ export * from './auth.js';
 export * from './tenant.js';
 export * from './platform.js';
 export * from './inventory.js';
+export * from './availability.js';

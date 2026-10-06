@@ -33,3 +33,29 @@ export const userActor = (p: Principal) => ({
   userId: p.userId,
   supportGrantId: p.supportGrantId,
 });
+
+/**
+ * Inventory changes (blocks, stop-sells) cover [start, end): not before today, and within the
+ * booking horizon (BR-04, BR-05).
+ */
+export function assertInventoryDates(
+  property: Pick<Property, 'timezone' | 'bookingHorizonDays'>,
+  start: LocalDate,
+  end: LocalDate,
+): LocalDate {
+  const businessDate = businessDateOf(property);
+  if (start.isBefore(businessDate)) {
+    throw new ApiError('DATE_IN_PAST', `Dates before today (${businessDate}) cannot be changed`, {
+      errors: [{ path: 'startDate', code: 'past', message: 'Choose today or later' }],
+    });
+  }
+  const horizonEnd = businessDate.plusDays(property.bookingHorizonDays);
+  if (end.isAfter(horizonEnd)) {
+    throw new ApiError(
+      'BEYOND_HORIZON',
+      `Dates can be set up to ${property.bookingHorizonDays} days ahead (until ${horizonEnd})`,
+      { errors: [{ path: 'endDate', code: 'horizon', message: `End by ${horizonEnd}` }] },
+    );
+  }
+  return businessDate;
+}

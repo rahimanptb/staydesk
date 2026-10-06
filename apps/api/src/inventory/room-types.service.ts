@@ -4,7 +4,13 @@ import type {
   RoomTypeView,
   UpdateRoomTypeRequest,
 } from '@staydesk/contracts';
-import type { DbTransaction, Prisma, RoomType } from '@staydesk/db';
+import {
+  ensureInventoryDays,
+  lockPropertyClosures,
+  type DbTransaction,
+  type Prisma,
+  type RoomType,
+} from '@staydesk/db';
 import { writeAudit } from '../audit/audit.js';
 import { writeOutbox } from '../audit/outbox.js';
 import type { Principal } from '../auth/principal.js';
@@ -127,7 +133,9 @@ export class RoomTypesService {
     this.assertFinancialsAllowed(principal, input);
     const tenantId = principal.tenantId!;
     const id = await this.run(principal, async (tx) => {
-      await requireProperty(tx, principal, propertyId);
+      const property = await requireProperty(tx, principal, propertyId);
+      // Serialised with stop-sell changes so the new rows get the right closure flags.
+      await lockPropertyClosures(tx, propertyId);
       await this.assertCodeFree(tx, propertyId, input.code);
       // Tracked room types start at 0 and grow as rooms are added.
       const total = input.trackRooms ? 0 : input.totalInventory;
@@ -148,6 +156,13 @@ export class RoomTypesService {
           tenantId,
           propertyId,
         },
+      });
+      // Pre-create the nights up to the booking horizon (docs/08 §14).
+      const businessDate = businessDateOf(property);
+      await ensureInventoryDays(tx, {
+        roomTypeIds: [created.id],
+        from: businessDate.toString(),
+        to: businessDate.plusDays(property.bookingHorizonDays + 1).toString(),
       });
       await writeAudit(tx, {
         tenantId,
@@ -321,12 +336,13 @@ export class RoomTypesService {
       if (!roomType) throw new ApiError('NOT_FOUND', 'No such room type');
       const businessDate = businessDateOf(property);
       const today = dateColumn(businessDate);
-      const [bookings, blocks] = await Promise.all([
-        tx.bookingRoom.count({
-          where: { roomTypeId, inventoryBucket: { not: 'NONE' }, invTo: { gt: today } },
-        }),
-        tx.roomBlock.count({ where: { roomTypeId, status: 'ACTIVE', endDate: { gt: today } } }),
-      ]);
+      // Sequential: one transaction is one connection, which runs one query at a time.
+      const bookings = await tx.bookingRoom.count({
+        where: { roomTypeId, inventoryBucket: { not: 'NONE' }, invTo: { gt: today } },
+      });
+      const blocks = await tx.roomBlock.count({
+        where: { roomTypeId, status: 'ACTIVE', endDate: { gt: today } },
+      });
       if (bookings + blocks > 0) {
         throw new ApiError(
           'INVENTORY_CONFLICT',

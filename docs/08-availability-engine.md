@@ -168,7 +168,7 @@ Test **CC-01** runs 50 parallel requests for the last room and asserts exactly o
 | Add / remove room line | `+bucket` / `−bucket` for that line |
 | Create block / OOS | `+BLOCKED` / `+OOS` × quantity over `[start, end)` |
 | Release block from date `x` | `−BLOCKED` over `[max(start, x), end)`; `end_date ← max(start, x)` |
-| Reduce block quantity by `k` from date `x` | Split: the original row ends at `x`; a new row with `quantity − k` covers `[x, end)` (keeps history exact) |
+| Reduce block quantity by `k` from date `x` | Before the block starts: quantity reduced in place. Once it has started: split — the original row ends at `x`; a new row (`split_from_id` → original) with `quantity − k` covers `[x, end)` (keeps history exact) |
 
 Past nights (`< businessDate`) are never released: they are history and feed the "rooms sold" metrics.
 
@@ -299,7 +299,10 @@ WHERE COALESCE(a.booked, 0)         <> COALESCE(e.booked, 0)
 
 ## 14. Horizon, row lifecycle, performance
 
-- Rows are pre-created for `[businessDate, businessDate + horizon]` when a room type is created; a nightly job extends by one day. The upsert in step 3 is the safety net.
+- Rows are pre-created for `[businessDate, businessDate + horizon]` when a room type is created; an hourly worker job keeps every property's rows up to its horizon (idempotent). The upsert in step 3 is the safety net. New rows take their closure flags from active stop-sells; stop-sell changes and room type creation are serialised per property by an advisory lock, so a new row can never miss a concurrent stop-sell.
+- The worker runs in each tenant's RLS context; it learns which properties exist only through the `SECURITY DEFINER` function `worker_inventory_targets()` (ids and scheduling fields only).
+- Every reconciliation run is recorded in the append-only `inventory_reconciliation` table; mismatches also emit `inventory.reconciliation_failed`. The repair command (`pnpm --filter @staydesk/worker inventory repair --property <id> --actor <name> --reason "…"`) rebuilds counters from the oracle, proves the result and writes an audit entry.
+- A total change also resets `overbook_allowance` to `max(0, consumed − total)`, so a stale allowance never weakens the CHECK backstop.
 - Indexes: PK `(room_type_id, date)` serves both lock and read paths; `(property_id, date)` serves property-wide grids and reports.
 - Budget: a 30-night × 20-type search touches 600 rows (< 5 ms). A booking writes ≤ 90 nights × types-in-booking rows.
 - Past rows are kept permanently as the "rooms sold" fact table (partitioned yearly at scale).

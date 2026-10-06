@@ -135,8 +135,13 @@ export class Browser {
     return { status: res.statusCode, body, headers: res.headers as Record<string, unknown> };
   }
 
-  request(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', path: string, body?: unknown) {
-    const headers: Record<string, string> = {};
+  request(
+    method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
+    path: string,
+    body?: unknown,
+    extraHeaders: Record<string, string> = {},
+  ) {
+    const headers: Record<string, string> = { ...extraHeaders };
     if (method !== 'GET') {
       headers.origin = `http://${this.host}`;
       if (this.csrfToken) headers['x-csrf-token'] = this.csrfToken;
@@ -148,8 +153,8 @@ export class Browser {
     return this.request('GET', path);
   }
 
-  post(path: string, body: unknown = {}) {
-    return this.request('POST', path, body);
+  post(path: string, body: unknown = {}, headers: Record<string, string> = {}) {
+    return this.request('POST', path, body, headers);
   }
 
   patch(path: string, body: unknown) {
