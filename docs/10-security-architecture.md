@@ -18,8 +18,8 @@ Baseline: **OWASP ASVS Level 2**, OWASP Top 10 (2021) and the API Security Top 1
 ## 2. Authentication
 
 - **Passwords:**
-  - hashed with Argon2id (memory 64 MiB, iterations 3, parallelism 1; tuned to ~250 ms on production hardware), with a per-hash salt from the library
-  - pepper held in the secret manager (HMAC before hashing), with rotation support via a hash version prefix
+  - hashed with Argon2id (memory 64 MiB, 2 passes, parallelism 1; tune to ~250–400 ms on production hardware) using Node's built-in implementation (OpenSSL), with a random 16-byte salt per hash, stored as a standard PHC string so parameters can be raised later
+  - pepper held in the secret manager and passed as Argon2's secret input (K), so a stolen database alone cannot be brute-forced
 - **Policy:** minimum 10 characters, no composition rules, blocked if found in the breached corpus (HIBP k-anonymity, P1), max 128 characters. The password itself is never logged.
 - **Login:**
   - constant-time comparison; a dummy hash for unknown emails (no timing-based enumeration)

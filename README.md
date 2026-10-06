@@ -2,7 +2,7 @@
 
 Multi-tenant SaaS for hotel and resort **room inventory, bookings and B2B travel-agent availability**.
 
-> **Status:** Design (Phases 1–12) is complete. **Phase 13, milestone M0 (foundations), is done.** The monorepo, shared domain rules, database schema and migrations, API, worker and the three web portals build, lint and pass their tests. Next is **M1: identity, tenancy, RBAC and audit**.
+> **Status:** Design (Phases 1–12) is complete. Phase 13 milestones **M0 (foundations)** and **M1 (identity, tenancy, roles and permissions, audit)** are done. Next is **M2: properties, room types and rooms**.
 
 ## Getting started
 
@@ -27,6 +27,16 @@ pnpm infra:up
 
 ```bash
 pnpm db:migrate
+```
+
+```bash
+pnpm build
+```
+
+Create the first Super Admin. This prints a one-time setup link; open it, choose a password, then sign in on the admin portal and set up two-factor authentication:
+
+```bash
+pnpm --filter @staydesk/api bootstrap:super-admin --email you@example.com --name "Your Name"
 ```
 
 ```bash
