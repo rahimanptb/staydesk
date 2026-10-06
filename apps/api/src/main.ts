@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule.forRoot(env), adapter, {
     logger: new PinoNestLogger(logger),
   });
-  configureApp(app);
+  await configureApp(app);
 
   await app.listen({ port: env.API_PORT, host: env.API_HOST });
   logger.info({ port: env.API_PORT, host: env.API_HOST }, 'StayDesk API listening');

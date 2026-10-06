@@ -1,4 +1,5 @@
 import { Controller, Get, Inject, Res } from '@nestjs/common';
+import { Public } from '../auth/decorators.js';
 import type { FastifyReply } from 'fastify';
 import type { HealthResponse } from '@staydesk/contracts';
 import type { DbClient } from '@staydesk/db';
@@ -8,6 +9,7 @@ import { DB_CLIENT } from '../database/database.module.js';
 const DB_CHECK_TIMEOUT_MS = 2_000;
 
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(
     @Inject(DB_CLIENT) private readonly db: DbClient,

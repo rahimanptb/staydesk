@@ -69,4 +69,11 @@ export default tseslint.config(
       globals: { ...globals.browser, ...globals.node },
     },
   },
+  {
+    // Tests read untyped HTTP response bodies.
+    files: ['**/test/**/*.ts', '**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 );

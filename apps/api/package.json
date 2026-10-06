@@ -10,14 +10,15 @@
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "bootstrap:super-admin": "node --env-file-if-exists=../../.env dist/cli/bootstrap-super-admin.js",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-fastify": "^12.1.2",
-    "@node-rs/argon2": "^2.2.1",
     "@staydesk/config": "workspace:*",
     "@staydesk/contracts": "workspace:*",
     "@staydesk/db": "workspace:*",

@@ -294,3 +294,16 @@ describe('migrations', () => {
     expect(diff.status, diff.output).toBe(0);
   });
 });
+
+describe('uuidv7', () => {
+  it('produces RFC 9562 version-7 ids that sort by creation time', async () => {
+    const { uuidv7 } = await import('../src/ids.js');
+    const early = uuidv7(1_700_000_000_000);
+    const late = uuidv7(1_700_000_000_001);
+    expect(early).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(early < late).toBe(true);
+    expect(early.slice(0, 13)).toBe('018bcfe5-6800');
+    const { rows } = await owner.query('SELECT $1::uuid AS id', [early]);
+    expect(rows[0]?.id).toBe(early);
+  });
+});

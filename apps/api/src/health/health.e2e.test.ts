@@ -11,6 +11,15 @@ import { DB_CLIENT } from '../database/database.module.js';
 const env = loadApiEnv({
   NODE_ENV: 'test',
   DATABASE_URL: 'postgresql://unused:unused@localhost:5432/unused',
+  PLATFORM_DATABASE_URL: 'postgresql://unused:unused@localhost:5432/unused',
+  REDIS_URL: 'redis://unused.invalid:6379',
+  SESSION_SECRET: 'test-session-secret-0123456789abcdef',
+  PASSWORD_PEPPER: 'test-password-pepper-0123456789abcd',
+  TOTP_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
+  HOTEL_ORIGIN: 'http://app.localhost:3000',
+  AGENT_ORIGIN: 'http://agent.localhost:3000',
+  ADMIN_ORIGIN: 'http://admin.localhost:3000',
+  SMTP_URL: 'smtp://unused.invalid:25',
   APP_VERSION: '1.2.3-test',
 });
 
@@ -28,7 +37,7 @@ async function startApp(dbHealthy: boolean): Promise<NestFastifyApplication> {
   app = moduleRef.createNestApplication<NestFastifyApplication>(
     new FastifyAdapter({ ...FASTIFY_OPTIONS, genReqId: generateRequestId }),
   );
-  configureApp(app);
+  await configureApp(app);
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
   return app;
@@ -71,7 +80,7 @@ describe('health endpoints', () => {
     const res = await server.inject({
       method: 'GET',
       url: '/api/v1/does-not-exist',
-      headers: { 'x-request-id': 'trace-abc-12345' },
+      headers: { host: 'app.localhost:3000', 'x-request-id': 'trace-abc-12345' },
     });
     expect(res.statusCode).toBe(404);
     expect(res.headers['content-type']).toContain('application/problem+json');

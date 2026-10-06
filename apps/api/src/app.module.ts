@@ -1,7 +1,22 @@
 import { Global, Module, type DynamicModule } from '@nestjs/common';
+import { AuthModule } from './auth/auth.module.js';
 import { API_ENV, type ApiEnv } from './config/env.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthController } from './health/health.controller.js';
+import {
+  PlatformPlansController,
+  PlatformTenantsController,
+} from './platform/platform.controllers.js';
+import { PlansService } from './platform/plans.service.js';
+import { TenantsService } from './platform/tenants.service.js';
+import { RolesService } from './tenant/roles.service.js';
+import {
+  AuditLogController,
+  RolesController,
+  TenantProfileController,
+  UsersController,
+} from './tenant/tenant.controllers.js';
+import { UsersService } from './tenant/users.service.js';
 
 @Global()
 @Module({})
@@ -15,12 +30,24 @@ class EnvModule {
   }
 }
 
+@Module({
+  controllers: [PlatformTenantsController, PlatformPlansController],
+  providers: [TenantsService, PlansService],
+})
+class PlatformModule {}
+
+@Module({
+  controllers: [TenantProfileController, UsersController, RolesController, AuditLogController],
+  providers: [UsersService, RolesService],
+})
+class TenantModule {}
+
 @Module({})
 export class AppModule {
   static forRoot(env: ApiEnv): DynamicModule {
     return {
       module: AppModule,
-      imports: [EnvModule.forRoot(env), DatabaseModule],
+      imports: [EnvModule.forRoot(env), DatabaseModule, AuthModule, PlatformModule, TenantModule],
       controllers: [HealthController],
     };
   }
